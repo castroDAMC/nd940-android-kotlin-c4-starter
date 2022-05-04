@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.reminderslist
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -60,6 +61,15 @@ class ReminderListFragment : BaseFragment() {
         )
     }
 
+    private fun navigateToLoginActivity() {
+        //use the navigationCommand live data to navigate between the fragments
+        _viewModel.navigationCommand.postValue(
+            NavigationCommand.To(
+                ReminderListFragmentDirections.toSaveReminder()
+            )
+        )
+    }
+
     private fun setupRecyclerView() {
         val adapter = RemindersListAdapter {
         }
@@ -71,6 +81,8 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
+                FirebaseAuth.getInstance().signOut()
+                this.navigateToAddReminder()
 //                TODO: add the logout implementation
             }
         }
