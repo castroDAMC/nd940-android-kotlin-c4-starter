@@ -13,6 +13,7 @@ import com.firebase.ui.auth.IdpResponse
 import com.firebase.ui.auth.IdpResponse.*
 import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
+import com.udacity.project4.locationreminders.RemindersActivity
 import kotlinx.android.synthetic.main.activity_authentication.*
 
 /**
@@ -49,7 +50,7 @@ class AuthenticationActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
-                launchSignInFlow()
+                loginWithFirebase()
             }
 
         }
@@ -63,7 +64,7 @@ class AuthenticationActivity : AppCompatActivity() {
         }
     }
 
-    private fun launchSignInFlow() {
+    private fun loginWithFirebase() {
         val providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build(), AuthUI.IdpConfig.GoogleBuilder().build()
         )
@@ -77,18 +78,23 @@ class AuthenticationActivity : AppCompatActivity() {
         )
     }
 
+    fun navigateToRemindersActivity(){
+        this.let{
+            val intent = Intent (it, RemindersActivity::class.java)
+            it.startActivity(intent)
+            // so can't click back button to previous login screen after logging in successfully
+            it.finish()
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == SIGN_IN_RESULT_CODE) {
             val response = fromResultIntent(data)
             if (resultCode == Activity.RESULT_OK) {
-                // Successfully signed in user.
-                Log.i(
-                    TAG,
-                    "Successfully signed in user " +
-                            "${FirebaseAuth.getInstance().currentUser?.displayName}!"
-                )
+                navigateToRemindersActivity()
             } else {
+                Toast.makeText(this, "Problem to Login", Toast.LENGTH_LONG).show()
                 Log.i(TAG, "Sign in unsuccessful ${response?.error?.errorCode}")
             }
         }
@@ -105,6 +111,7 @@ class AuthenticationActivity : AppCompatActivity() {
                 AuthenticationViewModel.AuthenticationState.AUTHENTICATED -> {
                     val user = FirebaseAuth.getInstance().currentUser?.email.toString()
                     txt_welcome_app.text = "Signed in user " + user
+                    navigateToRemindersActivity()
                 }
                 else -> {
                     txt_welcome_app.text = "User not signed"

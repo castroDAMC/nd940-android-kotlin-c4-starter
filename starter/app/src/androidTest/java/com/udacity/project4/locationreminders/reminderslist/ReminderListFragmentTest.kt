@@ -87,11 +87,11 @@ class ReminderListFragmentTest {
 
     private fun getReminder(): ReminderDTO {
         return ReminderDTO(
-            title = "title",
-            description = "desc",
-            location = "loc",
-            latitude = 47.5456551,
-            longitude = 122.0101731)
+            title = "TestTitle",
+            description = "TestLocation",
+            location = "fakeLocation",
+            latitude = -3.062060,
+            longitude = -60.025125)
     }
 
     @Test
@@ -124,14 +124,13 @@ class ReminderListFragmentTest {
     fun clickOnFabIcon_navigatesTo_saveReminderFragment() {
         val scenario =
             launchFragmentInContainer<ReminderListFragment>(Bundle(), R.style.AppTheme)
-        val navController = mock(NavController::class.java)
 
         scenario.onFragment {
-            Navigation.setViewNavController(it.view!!, navController)
+            Navigation.setViewNavController(it.view!!, mock(NavController::class.java))
         }
 
         onView(withId(R.id.addReminderFAB)).perform(click())
-        verify(navController).navigate(ReminderListFragmentDirections.toSaveReminder())
+        verify(mock(NavController::class.java)).navigate(ReminderListFragmentDirections.toSaveReminder())
     }
 
 

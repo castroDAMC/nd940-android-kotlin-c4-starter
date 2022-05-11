@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
@@ -35,11 +34,11 @@ class RemindersLocalRepositoryTest {
 
     private fun getReminder(): ReminderDTO {
         return ReminderDTO(
-            title = "title",
-            description = "desc",
-            location = "loc",
-            latitude = 47.5456551,
-            longitude = 122.0101731)
+            title = "TestTitle",
+            description = "TestLocation",
+            location = "fakeLocation",
+            latitude = -3.062060,
+            longitude = -60.025125)
     }
 
     @Before

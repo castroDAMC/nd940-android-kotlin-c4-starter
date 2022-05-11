@@ -3,12 +3,14 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.location.Location
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -23,8 +25,11 @@ import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.utils.isLocationPermissionGranted
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+
+private const val FINE_LOCATION_ACCESS_REQUEST_CODE = 1
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -43,8 +48,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private var isLocationSelected = false
     private var isMapAlreadyInitialized = false
-
-    private val FINE_LOCATION_ACCESS_REQUEST_CODE = 1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -84,12 +87,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
             addMarkerOnMap(poi.latLng, poi.name)
-        }
-    }
-
-    private fun setLongClick(map: GoogleMap) {
-        map.setOnMapLongClickListener { latLong ->
-            addMarkerOnMap(latLong, getString(R.string.dropped_pin))
         }
     }
 
@@ -140,78 +137,50 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(p0: GoogleMap?) {
-        Toast.makeText(context, "onMapReady", Toast.LENGTH_SHORT).show()
         isMapAlreadyInitialized = true
         map = p0!!
-        enableClickListeners()
-        enableUserLocation()
-
-    }
-
-    private fun enableClickListeners() {
         setPoiClick(map)
-        setLongClick(map)
+        enableUserLocation()
     }
 
-    private fun isLocationPermissionGranted(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            requireContext(),
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PERMISSION_GRANTED
-    }
+
 
     // Your app needs the ACCESS_FINE_LOCATION permission for getting the user’s location details
-
     @SuppressLint("MissingPermission")
     private fun enableUserLocation() {
-
-        if (this::lastMarker.isInitialized) {
-            lastMarker.remove()
-        }
-
-        when (isLocationPermissionGranted()) {
+        when (isLocationPermissionGranted(context!!)) {
             true -> {
-
-                // You can use the API that requires the permission.
                 map.isMyLocationEnabled = true
-
-                // Based on https://developer.android.com/training/location/retrieve-current?authuser=1
-                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context!!)
-                fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location: Location? ->
-                        if (location != null) {
-                            lastMarker = map.addMarker(
-                                MarkerOptions().position(
-                                    LatLng(
-                                        location.latitude,
-                                        location.longitude
-                                    )
-                                ).title("Actual Position")
-                            )
-                            map.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(
-                                    LatLng(
-                                        location.latitude,
-                                        location.longitude
-                                    ), 15f
-                                )
-                            )
-                        }
-                    }
-
+                getMyActualPosition()
             }
             false -> {
-                val sydney = LatLng(-34.0, 151.0)
-                lastMarker =
-                    map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15f))
+                var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
 
                 requestPermissions(
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    permissionsArray,
                     FINE_LOCATION_ACCESS_REQUEST_CODE
                 )
             }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getMyActualPosition() {
+        // Based on https://developer.android.com/training/location/retrieve-current?authuser=1
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context!!)
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    map.moveCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(
+                                location.latitude,
+                                location.longitude
+                            ), 15f
+                        )
+                    )
+                }
+            }
     }
 
     override fun onRequestPermissionsResult(
@@ -236,6 +205,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
 
     }
-
-
 }
+
+private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
+private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
+private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
+private const val LOCATION_PERMISSION_INDEX = 0
+private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1

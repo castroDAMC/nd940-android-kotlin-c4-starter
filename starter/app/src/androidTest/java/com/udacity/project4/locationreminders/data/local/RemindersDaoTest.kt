@@ -28,16 +28,12 @@ class RemindersDaoTest {
 
     private lateinit var database: RemindersDatabase
 
-//    TODO: Add testing implementation to the RemindersDao.kt
-
     // Executes each task synchronously using Architecture Components.
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun initDb() {
-        // Using an in-memory database so that the information stored here disappears when the
-        // process is killed.
         database = Room.inMemoryDatabaseBuilder(
             getApplicationContext(),
             RemindersDatabase::class.java
@@ -50,30 +46,26 @@ class RemindersDaoTest {
 
     private fun getReminder(): ReminderDTO {
         return ReminderDTO(
-            title = "title",
-            description = "desc",
-            location = "loc",
-            latitude = 47.5456551,
-            longitude = 122.0101731)
+            title = "TestTitle",
+            description = "TestLocation",
+            location = "fakeLocation",
+            latitude = -3.062060,
+            longitude = -60.025125)
     }
 
     @Test
-    fun insertReminderAndFindById() = runBlockingTest {
-        // GIVEN - Insert a reminder.
-        val reminder = getReminder()
-        database.reminderDao().saveReminder(reminder)
+    fun insertReminder_GetById_assertAllFields() = runBlockingTest {
+        val fakeReminder = getReminder()
+        database.reminderDao().saveReminder(fakeReminder)
+        val reminderFromDB = database.reminderDao().getReminderById(fakeReminder.id)
 
-        // WHEN - Get the reminder by id from the database.
-        val loaded = database.reminderDao().getReminderById(reminder.id)
-
-        // THEN - The loaded data contains the expected values.
-        assertThat<ReminderDTO>(loaded as ReminderDTO, notNullValue())
-        assertThat(loaded.id, `is`(reminder.id))
-        assertThat(loaded.title, `is`(reminder.title))
-        assertThat(loaded.description, `is`(reminder.description))
-        assertThat(loaded.latitude, `is`(reminder.latitude))
-        assertThat(loaded.longitude, `is`(reminder.longitude))
-        assertThat(loaded.location, `is`(reminder.location))
+        assertThat<ReminderDTO>(reminderFromDB as ReminderDTO, notNullValue())
+        assertThat(reminderFromDB.id, `is`(fakeReminder.id))
+        assertThat(reminderFromDB.title, `is`(fakeReminder.title))
+        assertThat(reminderFromDB.description, `is`(fakeReminder.description))
+        assertThat(reminderFromDB.latitude, `is`(fakeReminder.latitude))
+        assertThat(reminderFromDB.longitude, `is`(fakeReminder.longitude))
+        assertThat(reminderFromDB.location, `is`(fakeReminder.location))
     }
 
 }
